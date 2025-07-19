@@ -1,0 +1,322 @@
+-- Visual Pet Hatch Simulator with Drag, ESP, Auto-Random, and Pet Age Loader
+local Players       = game:GetService("Players")
+local Workspace     = game:GetService("Workspace")
+local TweenService  = game:GetService("TweenService")
+local UserInput     = game:GetService("UserInputService")
+local RunService    = game:GetService("RunService")
+
+local player    = Players.LocalPlayer
+local mouse     = player:GetMouse()
+
+-- Egg→Pet mapping
+local petTable = {
+    ["Common Egg"]     = {"Dog","Bunny","Golden Lab"},
+    ["Uncommon Egg"]   = {"Chicken","Black Bunny","Cat","Deer"},
+    ["Rare Egg"]       = {"Pig","Monkey","Rooster","Orange Tabby","Spotted Deer"},
+    ["Legendary Egg"]  = {"Cow","Polar Bear","Sea Otter","Turtle","Silver Monkey"},
+    ["Mythical Egg"]   = {"Grey Mouse","Brown Mouse","Squirrel","Red Giant Ant"},
+    ["Bug Egg"]        = {"Snail","Caterpillar","Giant Ant","Praying Mantis"},
+    ["Night Egg"]      = {"Frog","Hedgehog","Mole","Echo Frog","Night Owl"},
+    ["Bee Egg"]        = {"Bee","Honey Bee","Bear Bee","Petal Bee"},
+    ["AntiBee Egg"]    = {"Wasp","Moth","Tarantula Hawk"},
+    ["Oasis Egg"]      = {"Meerkat","Sand Snake","Axolotl"},
+    ["Paradise Egg"]   = {"Ostrich","Peacock","Capybara"},
+    ["Dinosaurs Egg"]  = {"Raptor","Triceratops","Stegosaurus"},
+    ["Primal Egg"]     = {"Parasaurolophus","Iguanodon","Pachycephalosaurus"},
+}
+
+-- Control flags & state
+local espEnabled  = true
+local truePetMap  = {}
+local autoRunning = false
+
+-- Set of all possible pet names (for Load Age script)
+local allPetsSet = {}
+for _, list in pairs(petTable) do
+    for _, name in ipairs(list) do
+        allPetsSet[name] = true
+    end
+end
+
+--------------------------------------------------------------------------------
+-- UTILITY FUNCTIONS
+--------------------------------------------------------------------------------
+
+-- A quick flash effect on buttons
+local function flashEffect(button)
+    local orig = button.BackgroundColor3
+    for i = 1, 3 do
+        button.BackgroundColor3 = Color3.new(1,1,1)
+        wait(0.05)
+        button.BackgroundColor3 = orig
+        wait(0.05)
+    end
+end
+
+-- Glitchy text color effect
+local function glitchLabelEffect(label)
+    coroutine.wrap(function()
+        local original = label.TextColor3
+        for _ = 1, 2 do
+            label.TextColor3 = Color3.new(1,0,0)
+            wait(0.07)
+            label.TextColor3 = original
+            wait(0.07)
+        end
+    end)()
+end
+
+-- Find all egg models within `radius` studs of the player
+local function getPlayerGardenEggs(radius)
+    local eggs = {}
+    local char = player.Character or player.CharacterAdded:Wait()
+    local root = char:FindFirstChild("HumanoidRootPart")
+    if not root then return eggs end
+
+    for _, obj in pairs(Workspace:GetDescendants()) do
+        if obj:IsA("Model") and petTable[obj.Name] then
+            local basePart = obj:FindFirstChildWhichIsA("BasePart")
+            if basePart then
+                local dist = (basePart.Position - root.Position).Magnitude
+                if dist <= (radius or 60) then
+                    -- Seed the truePetMap if unmapped
+                    if not truePetMap[obj] then
+                        local choices = petTable[obj.Name]
+                        truePetMap[obj] = choices[math.random(#choices)]
+                    end
+                    table.insert(eggs, obj)
+                end
+            end
+        end
+    end
+    return eggs
+end
+
+-- Apply a Billboard + Highlight to show egg → pet mapping
+local function applyEggESP(eggModel, petName)
+    if eggModel:FindFirstChild("PetBillboard", true) then
+        eggModel:FindFirstChild("PetBillboard", true):Destroy()
+    end
+    if eggModel:FindFirstChild("ESPHighlight") then
+        eggModel.ESPHighlight:Destroy()
+    end
+    if not espEnabled then return end
+
+    local basePart = eggModel:FindFirstChildWhichIsA("BasePart")
+    if not basePart then return end
+
+    -- Determine hatch readiness
+    local ready = true
+    local hatchTime = eggModel:FindFirstChild("HatchTime")
+    local readyFlag = eggModel:FindFirstChild("ReadyToHatch")
+    if (hatchTime and hatchTime.Value > 0) or (readyFlag and not readyFlag.Value) then
+        ready = false
+    end
+
+    -- Billboard
+    local gui = Instance.new("BillboardGui")
+    gui.Name         = "PetBillboard"
+    gui.Size         = UDim2.new(0,270,0,50)
+    gui.AlwaysOnTop  = true
+    gui.StudsOffset  = Vector3.new(0,4.5,0)
+    gui.MaxDistance  = 500
+    gui.Parent       = basePart
+
+    local label = Instance.new("TextLabel", gui)
+    label.Size              = UDim2.new(1,0,1,0)
+    label.BackgroundTransparency = 1
+    label.TextScaled        = true
+    label.Font              = Enum.Font.FredokaOne
+    label.Text              = eggModel.Name.." | "..petName
+    if not ready then
+        label.Text ..= " (Not Ready)"
+        label.TextColor3      = Color3.fromRGB(160,160,160)
+        label.TextStrokeTransparency = 0.5
+    else
+        label.TextColor3      = Color3.new(1,1,1)
+        label.TextStrokeTransparency = 0
+    end
+    glitchLabelEffect(label)
+
+    -- Highlight
+    local highlight = Instance.new("Highlight", eggModel)
+    highlight.Name             = "ESPHighlight"
+    highlight.Adornee          = basePart
+    highlight.FillColor        = Color3.fromRGB(255,200,0)
+    highlight.OutlineColor     = Color3.new(1,1,1)
+    highlight.FillTransparency = 0.7
+    highlight.DepthMode        = Enum.HighlightDepthMode.AlwaysOnTop
+end
+
+-- Remove ESP from an egg
+local function removeEggESP(eggModel)
+    if eggModel:FindFirstChild("PetBillboard", true) then
+        eggModel:FindFirstChild("PetBillboard", true):Destroy()
+    end
+    if eggModel:FindFirstChild("ESPHighlight") then
+        eggModel.ESPHighlight:Destroy()
+    end
+end
+
+-- Randomize all nearby eggs immediately
+local function randomizeNearbyEggs()
+    local eggs = getPlayerGardenEggs(60)
+    for _, egg in ipairs(eggs) do
+        local choices = petTable[egg.Name]
+        local pick = choices[math.random(#choices)]
+        truePetMap[egg] = pick
+        applyEggESP(egg, pick)
+    end
+    print("Randomized", #eggs, "eggs.")
+end
+
+--------------------------------------------------------------------------------
+-- GUI CONSTRUCTION
+--------------------------------------------------------------------------------
+
+local screenGui = Instance.new("ScreenGui")
+screenGui.Name   = "PetHatchGui"
+screenGui.Parent = player:WaitForChild("PlayerGui")
+
+local frame = Instance.new("Frame", screenGui)
+frame.Size            = UDim2.new(0,260,0,240)
+frame.Position        = UDim2.new(0,20,0,100)
+frame.BackgroundColor3= Color3.fromRGB(105,80,60)
+frame.BorderSizePixel = 0
+Instance.new("UICorner", frame).CornerRadius = UDim.new(0,10)
+
+-- Title Bar
+local title = Instance.new("TextLabel", frame)
+title.Size              = UDim2.new(1,0,0,30)
+title.Position          = UDim2.new(0,0,0,0)
+title.BackgroundTransparency = 1
+title.Text              = "🐾 Pet Randomizer ✨"
+title.Font              = Enum.Font.FredokaOne
+title.TextSize          = 22
+title.TextColor3        = Color3.new(1,1,1)
+
+-- Drag Handler
+local dragBtn = Instance.new("TextButton", title)
+dragBtn.Size              = UDim2.new(1,1,1,1)
+dragBtn.BackgroundTransparency = 1
+dragBtn.Text              = ""
+local dragging, off = false, Vector2.new()
+dragBtn.MouseButton1Down:Connect(function()
+    dragging = true
+    off = Vector2.new(mouse.X - frame.AbsolutePosition.X, mouse.Y - frame.AbsolutePosition.Y)
+end)
+UserInput.InputEnded:Connect(function() dragging = false end)
+RunService.RenderStepped:Connect(function()
+    if dragging then
+        frame.Position = UDim2.new(0, mouse.X - off.X, 0, mouse.Y - off.Y)
+    end
+end)
+
+-- 🎲 Randomize Button
+local randomizeBtn = Instance.new("TextButton", frame)
+randomizeBtn.Size             = UDim2.new(1,-20,0,50)
+randomizeBtn.Position         = UDim2.new(0,10,0,40)
+randomizeBtn.BackgroundColor3 = Color3.fromRGB(255,140,0)
+randomizeBtn.Font             = Enum.Font.FredokaOne
+randomizeBtn.TextSize         = 20
+randomizeBtn.TextColor3       = Color3.new(1,1,1)
+randomizeBtn.Text             = "🎲 Randomize Pets"
+randomizeBtn.MouseButton1Click:Connect(function()
+    coroutine.wrap(function() countdownAndRandomize(randomizeBtn) end)()
+end)
+
+-- 👁️ ESP Toggle
+local toggleBtn = Instance.new("TextButton", frame)
+toggleBtn.Size             = UDim2.new(1,-20,0,40)
+toggleBtn.Position         = UDim2.new(0,10,0,100)
+toggleBtn.BackgroundColor3 = Color3.fromRGB(60,60,60)
+toggleBtn.Font             = Enum.Font.FredokaOne
+toggleBtn.TextSize         = 18
+toggleBtn.TextColor3       = Color3.new(1,1,1)
+toggleBtn.Text             = "👁️ ESP: ON"
+toggleBtn.MouseButton1Click:Connect(function()
+    espEnabled = not espEnabled
+    toggleBtn.Text = espEnabled and "👁️ ESP: ON" or "👁️ ESP: OFF"
+    for _, egg in ipairs(getPlayerGardenEggs(60)) do
+        if espEnabled then
+            applyEggESP(egg, truePetMap[egg])
+        else
+            removeEggESP(egg)
+        end
+    end
+end)
+
+-- 🔁 Auto-Randomize
+local autoBtn = Instance.new("TextButton", frame)
+autoBtn.Size             = UDim2.new(1,-20,0,30)
+autoBtn.Position         = UDim2.new(0,10,0,145)
+autoBtn.BackgroundColor3 = Color3.fromRGB(80,150,60)
+autoBtn.Font             = Enum.Font.FredokaOne
+autoBtn.TextSize         = 16
+autoBtn.TextColor3       = Color3.new(1,1,1)
+autoBtn.Text             = "🔁 Auto Randomize: OFF"
+local bestPets = {Raccoon=true, Dragonfly=true, QueenBee=true, DiscoBee=true, FennecFox=true, Fox=true, MimicOctopus=true}
+
+autoBtn.MouseButton1Click:Connect(function()
+    autoRunning = not autoRunning
+    autoBtn.Text = autoRunning and "🔁 Auto Randomize: ON" or "🔁 Auto Randomize: OFF"
+    coroutine.wrap(function()
+        while autoRunning do
+            randomizeNearbyEggs()
+            for _, pet in pairs(truePetMap) do
+                if bestPets[pet:gsub("%s","")] then
+                    autoRunning = false
+                    autoBtn.Text = "🔁 Auto Randomize: OFF"
+                    return
+                end
+            end
+            wait(1)
+        end
+    end)()
+end)
+
+-- 🕒 Load Pet Age Button
+local loadAgeBtn = Instance.new("TextButton", frame)
+loadAgeBtn.Size             = UDim2.new(1,-20,0,30)
+loadAgeBtn.Position         = UDim2.new(0,10,1,-35)
+loadAgeBtn.BackgroundColor3 = Color3.fromRGB(100,90,200)
+loadAgeBtn.Font             = Enum.Font.FredokaOne
+loadAgeBtn.TextSize         = 16
+loadAgeBtn.TextColor3       = Color3.new(1,1,1)
+loadAgeBtn.Text             = "🕒 Load Pet Age 50 Script"
+
+loadAgeBtn.MouseButton1Click:Connect(function()
+    flashEffect(loadAgeBtn)
+    local count = 0
+    -- Find every pet model in workspace and set its Age to 50
+    for _, obj in pairs(Workspace:GetDescendants()) do
+        if obj:IsA("Model") and allPetsSet[obj.Name] then
+            local ageVal = obj:FindFirstChild("Age")
+            if not ageVal then
+                ageVal = Instance.new("NumberValue")
+                ageVal.Name = "Age"
+                ageVal.Parent = obj
+            end
+            ageVal.Value = 50
+            count += 1
+        end
+    end
+    loadAgeBtn.Text = "🕒 Loaded "..count.." Pets!"
+    wait(2)
+    loadAgeBtn.Text = "🕒 Load Pet Age 50 Script"
+end)
+
+-- Credit Label (always visible)
+local credit = Instance.new("TextLabel", frame)
+credit.Size              = UDim2.new(1,0,0,20)
+credit.Position          = UDim2.new(0,0,0,22)
+credit.BackgroundTransparency = 1
+credit.Text              = "Made by – Crimson"
+credit.Font              = Enum.Font.FredokaOne
+credit.TextSize          = 14
+credit.TextColor3        = Color3.fromRGB(200,200,200)
+
+-- INITIAL ESP PASS
+for _, egg in ipairs(getPlayerGardenEggs(60)) do
+    applyEggESP(egg, truePetMap[egg])
+end
