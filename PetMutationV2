@@ -178,8 +178,9 @@ title.Font = Enum.Font.FredokaOne
 title.TextSize = 22
 title.TextColor3 = Color3.fromRGB(255, 255, 255)
 
-- ❌ Close Button
+-- ❌ Close Button (with ESP cleanup)
 local closeBtn = Instance.new("TextButton")
+closeBtn.Name = "CloseButton"
 closeBtn.Size = UDim2.new(0, 24, 0, 24)
 closeBtn.Position = UDim2.new(1, -28, 0, 4)
 closeBtn.BackgroundColor3 = Color3.fromRGB(255, 0, 0)
@@ -189,9 +190,12 @@ closeBtn.TextSize = 14
 closeBtn.TextColor3 = Color3.new(1, 1, 1)
 closeBtn.Parent = frame
 
-Instance.new("UICorner", closeBtn).CornerRadius = UDim.new(0, 6)
+-- Rounded corners
+local corner = Instance.new("UICorner")
+corner.CornerRadius = UDim.new(0, 6)
+corner.Parent = closeBtn
 
--- Hover tween
+-- Hover animation
 closeBtn.MouseEnter:Connect(function()
 	TweenService:Create(closeBtn, TweenInfo.new(0.2), {
 		BackgroundColor3 = Color3.fromRGB(200, 0, 0)
@@ -204,7 +208,7 @@ closeBtn.MouseLeave:Connect(function()
 	}):Play()
 end)
 
--- Cleanup & destroy
+-- When clicked: remove ESP, destroy GUI
 closeBtn.MouseButton1Click:Connect(function()
 	espEnabled = false
 	for _, egg in pairs(getPlayerGardenEggs(60)) do
