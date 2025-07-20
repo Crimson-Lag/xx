@@ -277,7 +277,7 @@ mutationBtn.Text = "NEW 🧬 Pet Mutation Finder"
 mutationBtn.TextSize = 16
 mutationBtn.Font = Enum.Font.FredokaOne
 mutationBtn.TextColor3 = Color3.new(1, 1, 1)
-mutationBtn.Parent = frame
+
 
 mutationBtn.MouseButton1Click:Connect(function()
     loadstring(game:HttpGet("https://raw.githubusercontent.com/Crimson-Lag/x/refs/heads/main/PetMutationV2"))()
