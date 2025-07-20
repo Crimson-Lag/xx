@@ -160,7 +160,7 @@ local screenGui = Instance.new("ScreenGui", player:WaitForChild("PlayerGui"))
 screenGui.Name = "PetHatchGui"
 
 local frame = Instance.new("Frame")
-frame.Size = UDim2.new(0, 260, 0, 290) -- Increased height
+frame.Size = UDim2.new(0, 260, 0, 270) -- Increased height
 frame.Position = UDim2.new(0, 20, 0, 100)
 frame.BackgroundColor3 = Color3.fromRGB(0, 128, 128)
 frame.BackgroundTransparency = 0.1
@@ -268,15 +268,16 @@ end)
 
 
 
--- 🛠️ Pet Mutation Finder Button
+- 🧬 Pet Mutation Finder Button
 local mutationBtn = Instance.new("TextButton", frame)
-mutationBtn.Size = UDim2.new(1, -20, 0, 40)
-mutationBtn.Position = UDim2.new(0, 10, 0, 190)
-mutationBtn.BackgroundColor3 = Color3.fromRGB(216, 148, 169) -- Pink
-mutationBtn.Text = " NEW 🔬 Pet Mutation Finder"
+mutationBtn.Size = UDim2.new(1, -20, 0, 30)
+mutationBtn.Position = UDim2.new(0, 10, 1, -70)
+mutationBtn.BackgroundColor3 = Color3.fromRGB(200, 130, 130)
+mutationBtn.Text = "NEW 🧬 Pet Mutation Finder"
 mutationBtn.TextSize = 16
 mutationBtn.Font = Enum.Font.FredokaOne
-mutationBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+mutationBtn.TextColor3 = Color3.new(1, 1, 1)
+mutationBtn.Parent = frame
 
 mutationBtn.MouseButton1Click:Connect(function()
     loadstring(game:HttpGet("https://raw.githubusercontent.com/Crimson-Lag/x/refs/heads/main/PetMutationV2"))()
