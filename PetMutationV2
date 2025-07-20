@@ -178,94 +178,126 @@ title.Font = Enum.Font.FredokaOne
 title.TextSize = 22
 title.TextColor3 = Color3.fromRGB(255, 255, 255)
 
--- 📦 Module: Close Button
-local function createCloseButton()
-	local Players = game:GetService("Players")
-	local TweenService = game:GetService("TweenService")
-	local player = Players.LocalPlayer
-	local screenGui = player:WaitForChild("PlayerGui"):WaitForChild("PetHatchGui")
-	local frame = screenGui:FindFirstChild("MainFrame")
+-- ❌ Close Button
+local closeBtn = Instance.new("TextButton")
+closeBtn.Size = UDim2.new(0, 24, 0, 24)
+closeBtn.Position = UDim2.new(1, -28, 0, 4)
+closeBtn.BackgroundColor3 = Color3.fromRGB(255, 0, 0)
+closeBtn.Text = "❌"
+closeBtn.Font = Enum.Font.FredokaOne
+closeBtn.TextSize = 14
+closeBtn.TextColor3 = Color3.new(1, 1, 1)
+closeBtn.Parent = frame
 
-	local closeBtn = Instance.new("TextButton")
-	closeBtn.Name = "CloseButton"
-	closeBtn.Size = UDim2.new(0, 24, 0, 24)
-	closeBtn.Position = UDim2.new(1, -28, 0, 4)
-	closeBtn.BackgroundColor3 = Color3.fromRGB(255, 0, 0)
-	closeBtn.Text = "❌"
-	closeBtn.Font = Enum.Font.FredokaOne
-	closeBtn.TextSize = 14
-	closeBtn.TextColor3 = Color3.new(1, 1, 1)
-	closeBtn.Parent = frame
+Instance.new("UICorner", closeBtn).CornerRadius = UDim.new(0, 6)
 
-	Instance.new("UICorner", closeBtn).CornerRadius = UDim.new(0, 6)
+closeBtn.MouseEnter:Connect(function()
+	TweenService:Create(closeBtn, TweenInfo.new(0.2), {
+		BackgroundColor3 = Color3.fromRGB(200, 0, 0)
+	}):Play()
+end)
 
-	closeBtn.MouseEnter:Connect(function()
-		TweenService:Create(closeBtn, TweenInfo.new(0.2), {BackgroundColor3 = Color3.fromRGB(200, 0, 0)}):Play()
-	end)
-	closeBtn.MouseLeave:Connect(function()
-		TweenService:Create(closeBtn, TweenInfo.new(0.2), {BackgroundColor3 = Color3.fromRGB(255, 0, 0)}):Play()
-	end)
+closeBtn.MouseLeave:Connect(function()
+	TweenService:Create(closeBtn, TweenInfo.new(0.2), {
+		BackgroundColor3 = Color3.fromRGB(255, 0, 0)
+	}):Play()
+end)
 
-	closeBtn.MouseButton1Click:Connect(function()
-		screenGui:Destroy()
-	end)
-end
+closeBtn.MouseButton1Click:Connect(function()
+	screenGui:Destroy()
+end) 
 
--- 📦 Module: Toggle ESP Button
-local function createToggleESPButton(toggleESPCallback)
-	local frame = game.Players.LocalPlayer.PlayerGui:WaitForChild("PetHatchGui"):FindFirstChild("MainFrame")
-	local toggleBtn = Instance.new("TextButton", frame)
-	toggleBtn.Size = UDim2.new(1, -20, 0, 40)
-	toggleBtn.Position = UDim2.new(0, 10, 0, 90)
-	toggleBtn.BackgroundColor3 = Color3.fromRGB(205, 92, 122)
-	toggleBtn.Text = "👁️ ESP: ON"
-	toggleBtn.TextSize = 18
-	toggleBtn.Font = Enum.Font.FredokaOne
-	toggleBtn.TextColor3 = Color3.new(1, 1, 1)
 
-	local espEnabled = true
-	toggleBtn.MouseButton1Click:Connect(function()
-		espEnabled = not espEnabled
-		toggleBtn.Text = espEnabled and "👁️ ESP: ON" or "👁️ ESP: OFF"
-		toggleESPCallback(espEnabled)
-	end)
-end
+-- 👇 Dragging
+local drag = Instance.new("TextButton", title)
+drag.Size = UDim2.new(1, 0, 1, 0)
+drag.Text = ""
+drag.BackgroundTransparency = 1
 
--- 📦 Module: Auto Randomize Button
-local function createAutoRandomizeButton(randomizeCallback, checkBestPetCallback)
-	local frame = game.Players.LocalPlayer.PlayerGui:WaitForChild("PetHatchGui"):FindFirstChild("MainFrame")
-	local autoBtn = Instance.new("TextButton", frame)
-	autoBtn.Size = UDim2.new(1, -20, 0, 40)
-	autoBtn.Position = UDim2.new(0, 10, 0, 140)
-	autoBtn.BackgroundColor3 = Color3.fromRGB(134, 87, 133)
-	autoBtn.Text = "🔁 Auto Randomize: OFF"
-	autoBtn.TextSize = 16
-	autoBtn.Font = Enum.Font.FredokaOne
-	autoBtn.TextColor3 = Color3.new(1, 1, 1)
+local dragging, offset
+drag.MouseButton1Down:Connect(function()
+    dragging = true
+    offset = Vector2.new(mouse.X - frame.Position.X.Offset, mouse.Y - frame.Position.Y.Offset)
+end)
+UserInputService.InputEnded:Connect(function()
+    dragging = false
+end)
+RunService.RenderStepped:Connect(function()
+    if dragging then
+        frame.Position = UDim2.new(0, mouse.X - offset.X, 0, mouse.Y - offset.Y)
+    end
+end)
 
-	local autoRunning = false
-	autoBtn.MouseButton1Click:Connect(function()
-		autoRunning = not autoRunning
-		autoBtn.Text = autoRunning and "🔁 Auto Randomize: ON" or "🔁 Auto Randomize: OFF"
+-- 🎲 Randomize Button
+local randomizeBtn = Instance.new("TextButton", frame)
+randomizeBtn.Size = UDim2.new(1, -20, 0, 40)
+randomizeBtn.Position = UDim2.new(0, 10, 0, 40)
+randomizeBtn.BackgroundColor3 = Color3.fromRGB(128, 0, 128)
+randomizeBtn.Text = "🎲 Randomize Pets"
+randomizeBtn.TextSize = 20
+randomizeBtn.Font = Enum.Font.FredokaOne
+randomizeBtn.TextColor3 = Color3.new(1, 1, 1)
+randomizeBtn.MouseButton1Click:Connect(function()
+    countdownAndRandomize(randomizeBtn)
+end)
 
-		coroutine.wrap(function()
-			while autoRunning do
-				randomizeCallback()
-				if checkBestPetCallback() then
-					autoRunning = false
-					autoBtn.Text = "🔁 Auto Randomize: OFF"
-					break
-				end
-				wait(1)
-			end
-		end)()
-	end)
-end
+-- 👁️ ESP Toggle
+local toggleBtn = Instance.new("TextButton", frame)
+toggleBtn.Size = UDim2.new(1, -20, 0, 40)
+toggleBtn.Position = UDim2.new(0, 10, 0, 90)
+toggleBtn.BackgroundColor3 = Color3.fromRGB(205, 92, 122) -- Light pink
+toggleBtn.Text = "👁️ ESP: ON"
+toggleBtn.TextSize = 18
+toggleBtn.Font = Enum.Font.FredokaOne
+toggleBtn.TextColor3 = Color3.new(1, 1, 1)
+toggleBtn.MouseButton1Click:Connect(function()
+    espEnabled = not espEnabled
+    toggleBtn.Text = espEnabled and "👁️ ESP: ON" or "👁️ ESP: OFF"
+    for _, egg in pairs(getPlayerGardenEggs(60)) do
+        if espEnabled then
+            applyEggESP(egg, truePetMap[egg])
+        else
+            removeEggESP(egg)
+        end
+    end
+end)
 
--- ✅ USAGE EXAMPLE (Put at bottom of your GUI script)
--- createCloseButton()
--- createToggleESPButton(function(enabled) ... end)
--- createAutoRandomizeButton(function() ... end, function() return true or false end)
+-- 🔁 Auto Randomize Button
+local autoBtn = Instance.new("TextButton", frame)
+autoBtn.Size = UDim2.new(1, -20, 0, 40)
+autoBtn.Position = UDim2.new(0, 10, 0, 140)
+autoBtn.BackgroundColor3 = Color3.fromRGB(134, 87, 133) -- Light blue
+autoBtn.Text = "🔁 Auto Randomize: OFF"
+autoBtn.TextSize = 16
+autoBtn.Font = Enum.Font.FredokaOne
+autoBtn.TextColor3 = Color3.new(1, 1, 1)
+
+local autoRunning = false
+local bestPets = {
+    ["Raccoon"] = true, ["Dragonfly"] = true, ["Queen Bee"] = true,
+    ["Disco Bee"] = true, ["Fennec Fox"] = true, ["Fox"] = true,
+    ["Mimic Octopus"] = true, ["T-Rex"] = true, ["Spinosaurus"] = true,
+    ["Kitsune"] = true
+}
+
+autoBtn.MouseButton1Click:Connect(function()
+    autoRunning = not autoRunning
+    autoBtn.Text = autoRunning and "🔁 Auto Randomize: ON" or "🔁 Auto Randomize: OFF"
+    coroutine.wrap(function()
+        while autoRunning do
+            countdownAndRandomize(randomizeBtn)
+            for _, petName in pairs(truePetMap) do
+                if bestPets[petName] then
+                    autoRunning = false
+                    autoBtn.Text = "🔁 Auto Randomize: OFF"
+                    return
+                end
+            end
+            wait(1)
+        end
+    end)()
+end)
+
 
 
 
