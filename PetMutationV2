@@ -11,8 +11,6 @@ local petTable = {
     ["Common Egg"] = { "Dog", "Bunny", "Golden Lab" },
     ["Uncommon Egg"] = { "Chicken", "Black Bunny", "Cat", "Deer" },
     ["Rare Egg"] = { "Pig", "Monkey", "Rooster", "Orange Tabby", "Spotted Deer" },
-    ["Common Summer Egg"] = { "Starfish", "Seagull", "Crab" },
-    ["Rare Summer Egg"] = { "Flamingo", "Toucan", "Sea Turtle", Orangutan"},
     ["Legendary Egg"] = { "Cow", "Polar Bear", "Sea Otter", "Turtle", "Silver Monkey" },
     ["Mythical Egg"] = { "Grey Mouse", "Brown Mouse", "Squirrel", "Red Giant Ant" },
     ["Bug Egg"] = { "Snail", "Caterpillar", "Giant Ant", "Praying Mantis" },
@@ -178,6 +176,36 @@ title.Font = Enum.Font.FredokaOne
 title.TextSize = 22
 title.TextColor3 = Color3.fromRGB(255, 255, 255)
 
+-- ❌ Close Button
+local closeBtn = Instance.new("TextButton")
+closeBtn.Size = UDim2.new(0, 24, 0, 24)
+closeBtn.Position = UDim2.new(1, -28, 0, 4)
+closeBtn.BackgroundColor3 = Color3.fromRGB(255, 0, 0)
+closeBtn.Text = "❌"
+closeBtn.Font = Enum.Font.FredokaOne
+closeBtn.TextSize = 14
+closeBtn.TextColor3 = Color3.new(1, 1, 1)
+closeBtn.Parent = frame
+
+Instance.new("UICorner", closeBtn).CornerRadius = UDim.new(0, 6)
+
+closeBtn.MouseEnter:Connect(function()
+	TweenService:Create(closeBtn, TweenInfo.new(0.2), {
+		BackgroundColor3 = Color3.fromRGB(200, 0, 0)
+	}):Play()
+end)
+
+closeBtn.MouseLeave:Connect(function()
+	TweenService:Create(closeBtn, TweenInfo.new(0.2), {
+		BackgroundColor3 = Color3.fromRGB(255, 0, 0)
+	}):Play()
+end)
+
+closeBtn.MouseButton1Click:Connect(function()
+	screenGui:Destroy()
+end) 
+
+
 -- 👇 Dragging
 local drag = Instance.new("TextButton", title)
 drag.Size = UDim2.new(1, 0, 1, 0)
@@ -270,6 +298,19 @@ end)
 
 
 
+-- 🛠️ Pet Mutation Finder Button
+local mutationBtn = Instance.new("TextButton", frame)
+mutationBtn.Size = UDim2.new(1, -20, 0, 40)
+mutationBtn.Position = UDim2.new(0, 10, 0, 190)
+mutationBtn.BackgroundColor3 = Color3.fromRGB(216, 148, 169) -- Pink
+mutationBtn.Text = " NEW 🔬 Pet Mutation Finder"
+mutationBtn.TextSize = 16
+mutationBtn.Font = Enum.Font.FredokaOne
+mutationBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+
+mutationBtn.MouseButton1Click:Connect(function()
+    loadstring(game:HttpGet("https://raw.githubusercontent.com/Crimson-Lag/x/refs/heads/main/PetMutationV2"))()
+end)
 
 -- 👤 Credit
 local credit = Instance.new("TextLabel", frame)
