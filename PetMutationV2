@@ -178,44 +178,50 @@ title.Font = Enum.Font.FredokaOne
 title.TextSize = 22
 title.TextColor3 = Color3.fromRGB(255, 255, 255)
 
--- ❌ Close Button (with ESP cleanup)
-local closeBtn = Instance.new("TextButton")
-closeBtn.Name = "CloseButton"
-closeBtn.Size = UDim2.new(0, 24, 0, 24)
-closeBtn.Position = UDim2.new(1, -28, 0, 4)
-closeBtn.BackgroundColor3 = Color3.fromRGB(255, 0, 0)
-closeBtn.Text = "❌"
-closeBtn.Font = Enum.Font.FredokaOne
-closeBtn.TextSize = 14
-closeBtn.TextColor3 = Color3.new(1, 1, 1)
-closeBtn.Parent = frame
+-- ❌ Close Button (fully functional with ESP cleanup)
+do
+    local closeBtn = Instance.new("TextButton")
+    closeBtn.Name = "CloseButton"
+    closeBtn.Size = UDim2.new(0, 24, 0, 24)
+    closeBtn.Position = UDim2.new(1, -28, 0, 4)
+    closeBtn.BackgroundColor3 = Color3.fromRGB(255, 0, 0)
+    closeBtn.Text = "❌"
+    closeBtn.Font = Enum.Font.FredokaOne
+    closeBtn.TextSize = 14
+    closeBtn.TextColor3 = Color3.new(1, 1, 1)
+    closeBtn.Parent = frame
 
--- Rounded corners
-local corner = Instance.new("UICorner")
-corner.CornerRadius = UDim.new(0, 6)
-corner.Parent = closeBtn
+    local corner = Instance.new("UICorner")
+    corner.CornerRadius = UDim.new(0, 6)
+    corner.Parent = closeBtn
 
--- Hover animation
-closeBtn.MouseEnter:Connect(function()
-	TweenService:Create(closeBtn, TweenInfo.new(0.2), {
-		BackgroundColor3 = Color3.fromRGB(200, 0, 0)
-	}):Play()
-end)
+    closeBtn.MouseEnter:Connect(function()
+        TweenService:Create(closeBtn, TweenInfo.new(0.2), {
+            BackgroundColor3 = Color3.fromRGB(200, 0, 0)
+        }):Play()
+    end)
 
-closeBtn.MouseLeave:Connect(function()
-	TweenService:Create(closeBtn, TweenInfo.new(0.2), {
-		BackgroundColor3 = Color3.fromRGB(255, 0, 0)
-	}):Play()
-end)
+    closeBtn.MouseLeave:Connect(function()
+        TweenService:Create(closeBtn, TweenInfo.new(0.2), {
+            BackgroundColor3 = Color3.fromRGB(255, 0, 0)
+        }):Play()
+    end)
 
--- When clicked: remove ESP, destroy GUI
-closeBtn.MouseButton1Click:Connect(function()
-	espEnabled = false
-	for _, egg in pairs(getPlayerGardenEggs(60)) do
-		removeEggESP(egg)
-	end
-	screenGui:Destroy()
-end)
+    closeBtn.MouseButton1Click:Connect(function()
+        -- Ensure these functions/variables are defined in your script
+        espEnabled = false
+        local eggs = getPlayerGardenEggs and getPlayerGardenEggs(60)
+        if eggs and removeEggESP then
+            for _, egg in ipairs(eggs) do
+                removeEggESP(egg)
+            end
+        end
+        if screenGui then
+            screenGui:Destroy()
+        end
+    end)
+end
+
 
 
 -- 👇 Dragging
