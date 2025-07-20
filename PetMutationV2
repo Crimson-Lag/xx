@@ -1,12 +1,15 @@
---- Visual pet hatch simulator with drag, ESP, auto random, pet age loader
+-- 🌟 Pet Hatch Simulator GUI with ESP, Randomizer, Auto-Hatch, Mutation Finder
+
 local Players = game:GetService("Players")
 local Workspace = game:GetService("Workspace")
 local TweenService = game:GetService("TweenService")
 local UserInputService = game:GetService("UserInputService")
 local RunService = game:GetService("RunService")
+
 local player = Players.LocalPlayer
 local mouse = player:GetMouse()
 
+-- 🥚 Pet Table
 local petTable = {
     ["Common Egg"] = { "Dog", "Bunny", "Golden Lab" },
     ["Uncommon Egg"] = { "Chicken", "Black Bunny", "Cat", "Deer" },
@@ -14,7 +17,7 @@ local petTable = {
     ["Legendary Egg"] = { "Cow", "Polar Bear", "Sea Otter", "Turtle", "Silver Monkey" },
     ["Mythical Egg"] = { "Grey Mouse", "Brown Mouse", "Squirrel", "Red Giant Ant" },
     ["Bug Egg"] = { "Snail", "Caterpillar", "Giant Ant", "Praying Mantis" },
-    ["Night Egg"] = { "Frog", "Hedgehog", "Mole", "Echo Frog", "Night Owl", },
+    ["Night Egg"] = { "Frog", "Hedgehog", "Mole", "Echo Frog", "Night Owl" },
     ["Bee Egg"] = { "Bee", "Honey Bee", "Bear Bee", "Petal Bee" },
     ["Anti Bee Egg"] = { "Wasp", "Moth", "Tarantula Hawk" },
     ["Oasis Egg"] = { "Meerkat", "Sand Snake", "Axolotl" },
@@ -24,13 +27,14 @@ local petTable = {
     ["Zen Egg"] = { "Shiba Inu", "Nihonzaru", "Tanuki" },
 }
 
-local espEnabled = trueS
+local espEnabled = true
 local truePetMap = {}
 
+-- 🌀 Glitch Effect
 local function glitchLabelEffect(label)
     coroutine.wrap(function()
         local original = label.TextColor3
-        for i = 1, 2 do
+        for _ = 1, 2 do
             label.TextColor3 = Color3.new(1, 0, 0)
             wait(0.07)
             label.TextColor3 = original
@@ -39,62 +43,43 @@ local function glitchLabelEffect(label)
     end)()
 end
 
+-- 📌 Apply ESP
 local function applyEggESP(eggModel, petName)
-    local existingLabel = eggModel:FindFirstChild("PetBillboard", true)
-    if existingLabel then existingLabel:Destroy() end
-    local existingHighlight = eggModel:FindFirstChild("ESPHighlight")
-    if existingHighlight then existingHighlight:Destroy() end
-    if not espEnabled then return end
-
     local basePart = eggModel:FindFirstChildWhichIsA("BasePart")
     if not basePart then return end
+    if not espEnabled then return end
 
-    local hatchReady = true
-    local hatchTime = eggModel:FindFirstChild("HatchTime")
-    local readyFlag = eggModel:FindFirstChild("ReadyToHatch")
+    local existing = eggModel:FindFirstChild("PetBillboard", true)
+    if existing then existing:Destroy() end
+    local existingHighlight = eggModel:FindFirstChild("ESPHighlight")
+    if existingHighlight then existingHighlight:Destroy() end
 
-    if hatchTime and hatchTime:IsA("NumberValue") and hatchTime.Value > 0 then
-        hatchReady = false
-    elseif readyFlag and readyFlag:IsA("BoolValue") and not readyFlag.Value then
-        hatchReady = false
-    end
-
-    local billboard = Instance.new("BillboardGui")
+    local billboard = Instance.new("BillboardGui", basePart)
     billboard.Name = "PetBillboard"
     billboard.Size = UDim2.new(0, 270, 0, 50)
     billboard.StudsOffset = Vector3.new(0, 4.5, 0)
     billboard.AlwaysOnTop = true
     billboard.MaxDistance = 500
-    billboard.Parent = basePart
 
-    local label = Instance.new("TextLabel")
+    local label = Instance.new("TextLabel", billboard)
     label.Size = UDim2.new(1, 0, 1, 0)
     label.BackgroundTransparency = 1
     label.Text = eggModel.Name .. " | " .. petName
-    if not hatchReady then
-        label.Text = eggModel.Name .. " | " .. petName .. " (Not Ready)"
-        label.TextColor3 = Color3.fromRGB(160, 160, 160)
-        label.TextStrokeTransparency = 0.5
-    else
-        label.TextColor3 = Color3.new(1, 1, 1)
-        label.TextStrokeTransparency = 0
-    end
+    label.TextColor3 = Color3.new(1, 1, 1)
+    label.TextStrokeTransparency = 0
     label.TextScaled = true
     label.Font = Enum.Font.FredokaOne
-    label.Parent = billboard
-
     glitchLabelEffect(label)
 
-    local highlight = Instance.new("Highlight")
+    local highlight = Instance.new("Highlight", eggModel)
     highlight.Name = "ESPHighlight"
     highlight.FillColor = Color3.fromRGB(255, 200, 0)
     highlight.OutlineColor = Color3.fromRGB(255, 255, 255)
     highlight.FillTransparency = 0.7
     highlight.DepthMode = Enum.HighlightDepthMode.AlwaysOnTop
-    highlight.Adornee = eggModel
-    highlight.Parent = eggModel
 end
 
+-- 🚫 Remove ESP
 local function removeEggESP(eggModel)
     local label = eggModel:FindFirstChild("PetBillboard", true)
     if label then label:Destroy() end
@@ -102,19 +87,19 @@ local function removeEggESP(eggModel)
     if highlight then highlight:Destroy() end
 end
 
+-- 🔍 Find Eggs Nearby
 local function getPlayerGardenEggs(radius)
     local eggs = {}
-    local char = player.Character or player.CharacterAdded:Wait()
-    local root = char:FindFirstChild("HumanoidRootPart")
+    local root = (player.Character or player.CharacterAdded:Wait()):FindFirstChild("HumanoidRootPart")
     if not root then return eggs end
 
-    for _, obj in pairs(Workspace:GetDescendants()) do
+    for _, obj in ipairs(Workspace:GetDescendants()) do
         if obj:IsA("Model") and petTable[obj.Name] then
             local dist = (obj:GetModelCFrame().Position - root.Position).Magnitude
             if dist <= (radius or 60) then
                 if not truePetMap[obj] then
                     local pets = petTable[obj.Name]
-                    local chosen = pets[math.random(1, #pets)]
+                    local chosen = pets[math.random(#pets)]
                     truePetMap[obj] = chosen
                 end
                 table.insert(eggs, obj)
@@ -124,27 +109,29 @@ local function getPlayerGardenEggs(radius)
     return eggs
 end
 
+-- 🎲 Randomize ESP
 local function randomizeNearbyEggs()
     local eggs = getPlayerGardenEggs(60)
     for _, egg in ipairs(eggs) do
         local pets = petTable[egg.Name]
-        local chosen = pets[math.random(1, #pets)]
+        local chosen = pets[math.random(#pets)]
         truePetMap[egg] = chosen
         applyEggESP(egg, chosen)
     end
-    print("Randomized", #eggs, "eggs.")
 end
 
+-- ⚡ Button Flash
 local function flashEffect(button)
-    local originalColor = button.BackgroundColor3
-    for i = 1, 3 do
+    local original = button.BackgroundColor3
+    for _ = 1, 3 do
         button.BackgroundColor3 = Color3.new(1, 1, 1)
         wait(0.05)
-        button.BackgroundColor3 = originalColor
+        button.BackgroundColor3 = original
         wait(0.05)
     end
 end
 
+-- 🕐 Countdown
 local function countdownAndRandomize(button)
     for i = 5, 1, -1 do
         button.Text = "🎲 Randomize in: " .. i
@@ -155,29 +142,28 @@ local function countdownAndRandomize(button)
     button.Text = "🎲 Randomize Pets"
 end
 
--- 🌿 GUI Setup
+-- 🎛️ UI Elements
 local screenGui = Instance.new("ScreenGui", player:WaitForChild("PlayerGui"))
 screenGui.Name = "PetHatchGui"
 
-local frame = Instance.new("Frame")
-frame.Size = UDim2.new(0, 260, 0, 260) -- Increased height
+local frame = Instance.new("Frame", screenGui)
+frame.Size = UDim2.new(0, 260, 0, 270)
 frame.Position = UDim2.new(0, 20, 0, 100)
 frame.BackgroundColor3 = Color3.fromRGB(0, 128, 128)
-frame.BackgroundTransparency = 0.1
 frame.BorderSizePixel = 0
-frame.Parent = screenGui
 Instance.new("UICorner", frame).CornerRadius = UDim.new(0, 10)
 
+-- 🐾 Title
 local title = Instance.new("TextLabel", frame)
 title.Size = UDim2.new(1, 0, 0, 30)
-title.BackgroundTransparency = 1
 title.Text = "🐾 Pet Randomizer ✨"
+title.TextColor3 = Color3.new(1, 1, 1)
+title.BackgroundTransparency = 1
 title.Font = Enum.Font.FredokaOne
 title.TextSize = 22
-title.TextColor3 = Color3.fromRGB(255, 255, 255)
 
--- ❌ Close Button
-local closeBtn = Instance.new("TextButton")
+-- ❌ Close
+local closeBtn = Instance.new("TextButton", frame)
 closeBtn.Size = UDim2.new(0, 24, 0, 24)
 closeBtn.Position = UDim2.new(1, -28, 0, 4)
 closeBtn.BackgroundColor3 = Color3.fromRGB(255, 0, 0)
@@ -185,32 +171,17 @@ closeBtn.Text = "❌"
 closeBtn.Font = Enum.Font.FredokaOne
 closeBtn.TextSize = 14
 closeBtn.TextColor3 = Color3.new(1, 1, 1)
-closeBtn.Parent = frame
-
 Instance.new("UICorner", closeBtn).CornerRadius = UDim.new(0, 6)
 
-closeBtn.MouseEnter:Connect(function()
-	TweenService:Create(closeBtn, TweenInfo.new(0.2), {
-		BackgroundColor3 = Color3.fromRGB(200, 0, 0)
-	}):Play()
-end)
-
-closeBtn.MouseLeave:Connect(function()
-	TweenService:Create(closeBtn, TweenInfo.new(0.2), {
-		BackgroundColor3 = Color3.fromRGB(255, 0, 0)
-	}):Play()
-end)
-
 closeBtn.MouseButton1Click:Connect(function()
-	screenGui:Destroy()
-end) 
+    screenGui:Destroy()
+end)
 
-
--- 👇 Dragging
+-- 🖱️ Draggable
 local drag = Instance.new("TextButton", title)
 drag.Size = UDim2.new(1, 0, 1, 0)
-drag.Text = ""
 drag.BackgroundTransparency = 1
+drag.Text = ""
 
 local dragging, offset
 drag.MouseButton1Down:Connect(function()
@@ -232,8 +203,8 @@ randomizeBtn.Size = UDim2.new(1, -20, 0, 40)
 randomizeBtn.Position = UDim2.new(0, 10, 0, 40)
 randomizeBtn.BackgroundColor3 = Color3.fromRGB(128, 0, 128)
 randomizeBtn.Text = "🎲 Randomize Pets"
-randomizeBtn.TextSize = 20
 randomizeBtn.Font = Enum.Font.FredokaOne
+randomizeBtn.TextSize = 20
 randomizeBtn.TextColor3 = Color3.new(1, 1, 1)
 randomizeBtn.MouseButton1Click:Connect(function()
     countdownAndRandomize(randomizeBtn)
@@ -243,10 +214,10 @@ end)
 local toggleBtn = Instance.new("TextButton", frame)
 toggleBtn.Size = UDim2.new(1, -20, 0, 40)
 toggleBtn.Position = UDim2.new(0, 10, 0, 90)
-toggleBtn.BackgroundColor3 = Color3.fromRGB(205, 92, 122) -- Light pink
+toggleBtn.BackgroundColor3 = Color3.fromRGB(205, 92, 122)
 toggleBtn.Text = "👁️ ESP: ON"
-toggleBtn.TextSize = 18
 toggleBtn.Font = Enum.Font.FredokaOne
+toggleBtn.TextSize = 18
 toggleBtn.TextColor3 = Color3.new(1, 1, 1)
 toggleBtn.MouseButton1Click:Connect(function()
     espEnabled = not espEnabled
@@ -260,22 +231,19 @@ toggleBtn.MouseButton1Click:Connect(function()
     end
 end)
 
--- 🔁 Auto Randomize Button
+-- 🔁 Auto Randomize
 local autoBtn = Instance.new("TextButton", frame)
 autoBtn.Size = UDim2.new(1, -20, 0, 40)
 autoBtn.Position = UDim2.new(0, 10, 0, 140)
-autoBtn.BackgroundColor3 = Color3.fromRGB(134, 87, 133) -- Light blue
+autoBtn.BackgroundColor3 = Color3.fromRGB(134, 87, 133)
 autoBtn.Text = "🔁 Auto Randomize: OFF"
-autoBtn.TextSize = 16
 autoBtn.Font = Enum.Font.FredokaOne
+autoBtn.TextSize = 16
 autoBtn.TextColor3 = Color3.new(1, 1, 1)
 
 local autoRunning = false
 local bestPets = {
-    ["Raccoon"] = true, ["Dragonfly"] = true, ["Queen Bee"] = true,
-    ["Disco Bee"] = true, ["Fennec Fox"] = true, ["Fox"] = true,
-    ["Mimic Octopus"] = true, ["T-Rex"] = true, ["Spinosaurus"] = true,
-    ["Kitsune"] = true
+    ["T-Rex"] = true, ["Spinosaurus"] = true, ["Kitsune"] = true
 }
 
 autoBtn.MouseButton1Click:Connect(function()
@@ -296,28 +264,25 @@ autoBtn.MouseButton1Click:Connect(function()
     end)()
 end)
 
-
-
--- 🛠️ Pet Mutation Finder Button
+-- 🧬 Pet Mutation Finder
 local mutationBtn = Instance.new("TextButton", frame)
 mutationBtn.Size = UDim2.new(1, -20, 0, 40)
 mutationBtn.Position = UDim2.new(0, 10, 0, 190)
-mutationBtn.BackgroundColor3 = Color3.fromRGB(216, 148, 169) -- Pink
-mutationBtn.Text = " NEW 🔬 Pet Mutation Finder"
-mutationBtn.TextSize = 16
+mutationBtn.BackgroundColor3 = Color3.fromRGB(216, 148, 169)
+mutationBtn.Text = "🔬 Pet Mutation Finder"
 mutationBtn.Font = Enum.Font.FredokaOne
-mutationBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
-
+mutationBtn.TextSize = 16
+mutationBtn.TextColor3 = Color3.new(1, 1, 1)
 mutationBtn.MouseButton1Click:Connect(function()
     loadstring(game:HttpGet("https://raw.githubusercontent.com/Crimson-Lag/x/refs/heads/main/PetMutationV2"))()
 end)
 
--- 👤 Credit
+-- 🧾 Credit
 local credit = Instance.new("TextLabel", frame)
 credit.Size = UDim2.new(1, 0, 0, 20)
-credit.Position = UDim2.new(0, 0, 0, 22)
+credit.Position = UDim2.new(0, 0, 1, -20)
 credit.BackgroundTransparency = 1
-credit.Text = "Made by - Kitsu "
+credit.Text = "Made by - Kitsu"
 credit.Font = Enum.Font.FredokaOne
 credit.TextSize = 14
 credit.TextColor3 = Color3.fromRGB(200, 200, 200)
