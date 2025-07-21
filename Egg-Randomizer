@@ -281,4 +281,3 @@ credit.TextSize = 14
 credit.TextColor3 = Color3.fromRGB(160, 160, 160)
 credit.TextTransparency = 0.1
 credit.TextXAlignment = Enum.TextXAlignment.Center
-
