@@ -308,24 +308,5 @@ credit.TextColor3 = Color3.fromRGB(160, 160, 160)
 credit.TextTransparency = 0.1
 credit.TextXAlignment = Enum.TextXAlignment.Center
 
--- 🔁 Toggle GUI visibility
-closeBtn.MouseButton1Click:Connect(function()
-    frame.Visible = false
-    reopenBtn.Visible = true
-
-    -- Optional: Disable ESP & Auto
-    espEnabled = false
-    autoRunning = false
-    toggleBtn.Text = "👁️ ESP: OFF"
-    autoBtn.Text = "🔁 Auto Randomize: OFF"
-    for _, egg in pairs(getPlayerGardenEggs(60)) do
-        removeEggESP(egg)
-    end
-end)
-
-reopenBtn.MouseButton1Click:Connect(function()
-    frame.Visible = true
-    reopenBtn.Visible = false
-end)
 
 
