@@ -178,6 +178,30 @@ title.Font = Enum.Font.FredokaOne
 title.TextSize = 24
 title.TextColor3 = Color3.fromRGB(255, 255, 255)
 
+-- ❌ Close/Toggle Button
+local toggleVisibleBtn = Instance.new("TextButton")
+toggleVisibleBtn.Size = UDim2.new(0, 30, 0, 30)
+toggleVisibleBtn.Position = UDim2.new(1, -34, 0, 4)
+toggleVisibleBtn.BackgroundColor3 = Color3.fromRGB(200, 60, 60)
+toggleVisibleBtn.Text = "✕"
+toggleVisibleBtn.Font = Enum.Font.FredokaOne
+toggleVisibleBtn.TextSize = 18
+toggleVisibleBtn.TextColor3 = Color3.new(1, 1, 1)
+toggleVisibleBtn.Parent = frame
+Instance.new("UICorner", toggleVisibleBtn).CornerRadius = UDim.new(0, 6)
+
+local isVisible = true
+toggleVisibleBtn.MouseButton1Click:Connect(function()
+    isVisible = not isVisible
+    for _, child in ipairs(frame:GetChildren()) do
+        if child ~= toggleVisibleBtn and child:IsA("GuiObject") then
+            child.Visible = isVisible
+        end
+    end
+    toggleVisibleBtn.Text = isVisible and "✕" or "☰"
+end)
+
+
 -- 👇 Dragging Support
 local drag = Instance.new("TextButton", title)
 drag.Size = UDim2.new(1, 0, 1, 0)
