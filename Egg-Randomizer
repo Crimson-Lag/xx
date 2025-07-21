@@ -157,11 +157,10 @@ local function countdownAndRandomize(button)
     button.Text = "🎲 Randomize Pets"
 end
 
---- 🌿 GUI Setup (Improved Look & Toggle Support)
+-- 🌿 GUI Setup (Improved Look)
 local screenGui = Instance.new("ScreenGui", player:WaitForChild("PlayerGui"))
 screenGui.Name = "PetHatchGui"
 
--- 🪟 Main Frame
 local frame = Instance.new("Frame")
 frame.Size = UDim2.new(0, 280, 0, 265)
 frame.Position = UDim2.new(0, 20, 0, 100)
@@ -170,7 +169,6 @@ frame.BorderSizePixel = 0
 frame.Parent = screenGui
 Instance.new("UICorner", frame).CornerRadius = UDim.new(0, 12)
 
--- 📛 Title
 local title = Instance.new("TextLabel", frame)
 title.Size = UDim2.new(1, 0, 0, 36)
 title.Position = UDim2.new(0, 0, 0, 0)
@@ -200,31 +198,6 @@ RunService.RenderStepped:Connect(function()
     end
 end)
 
--- ❌ Close Button on Frame
-local closeBtn = Instance.new("TextButton")
-closeBtn.Size = UDim2.new(0, 30, 0, 30)
-closeBtn.Position = UDim2.new(1, -34, 0, 4)
-closeBtn.BackgroundColor3 = Color3.fromRGB(190, 50, 50)
-closeBtn.Text = "✕"
-closeBtn.Font = Enum.Font.FredokaOne
-closeBtn.TextSize = 20
-closeBtn.TextColor3 = Color3.new(1, 1, 1)
-closeBtn.Parent = frame
-Instance.new("UICorner", closeBtn).CornerRadius = UDim.new(0, 6)
-
--- ☰ Reopen Button (Initially Hidden)
-local reopenBtn = Instance.new("TextButton")
-reopenBtn.Size = UDim2.new(0, 40, 0, 40)
-reopenBtn.Position = UDim2.new(0, 20, 0, 20)
-reopenBtn.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
-reopenBtn.Text = "☰"
-reopenBtn.TextSize = 24
-reopenBtn.Font = Enum.Font.FredokaOne
-reopenBtn.TextColor3 = Color3.new(1, 1, 1)
-reopenBtn.Visible = false
-reopenBtn.Parent = screenGui
-Instance.new("UICorner", reopenBtn).CornerRadius = UDim.new(0, 8)
-
 -- 🎲 Randomize Button
 local randomizeBtn = Instance.new("TextButton", frame)
 randomizeBtn.Size = UDim2.new(1, -24, 0, 50)
@@ -240,7 +213,7 @@ randomizeBtn.MouseButton1Click:Connect(function()
 end)
 
 -- 👁️ ESP Toggle
-toggleBtn = Instance.new("TextButton", frame)
+local toggleBtn = Instance.new("TextButton", frame)
 toggleBtn.Size = UDim2.new(1, -24, 0, 40)
 toggleBtn.Position = UDim2.new(0, 12, 0, 110)
 toggleBtn.BackgroundColor3 = Color3.fromRGB(100, 100, 180)
@@ -262,7 +235,7 @@ toggleBtn.MouseButton1Click:Connect(function()
 end)
 
 -- 🔁 Auto Randomize Button
-autoBtn = Instance.new("TextButton", frame)
+local autoBtn = Instance.new("TextButton", frame)
 autoBtn.Size = UDim2.new(1, -24, 0, 40)
 autoBtn.Position = UDim2.new(0, 12, 0, 160)
 autoBtn.BackgroundColor3 = Color3.fromRGB(70, 170, 80)
@@ -272,12 +245,13 @@ autoBtn.Font = Enum.Font.FredokaOne
 autoBtn.TextColor3 = Color3.new(1, 1, 1)
 Instance.new("UICorner", autoBtn).CornerRadius = UDim.new(0, 8)
 
-autoRunning = false
+local autoRunning = false
 local bestPets = {
     ["Raccoon"] = true, ["Dragonfly"] = true, ["Queen Bee"] = true,
     ["Disco Bee"] = true, ["Fennec Fox"] = true, ["Fox"] = true,
     ["Mimic Octopus"] = true
 }
+
 autoBtn.MouseButton1Click:Connect(function()
     autoRunning = not autoRunning
     autoBtn.Text = autoRunning and "🔁 Auto Randomize: ON" or "🔁 Auto Randomize: OFF"
@@ -307,6 +281,4 @@ credit.TextSize = 14
 credit.TextColor3 = Color3.fromRGB(160, 160, 160)
 credit.TextTransparency = 0.1
 credit.TextXAlignment = Enum.TextXAlignment.Center
-
-
 
