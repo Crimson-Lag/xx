@@ -9,17 +9,19 @@ local mouse = player:GetMouse()
 
 local petTable = {
    ["Common Egg"] = { "Dog", "Bunny", "Golden Lab" },
+    ["Common Summer Egg"] = { "Starfish", "Seagull", "Crab" },
     ["Uncommon Egg"] = { "Chicken", "Black Bunny", "Cat", "Deer" },
     ["Rare Egg"] = { "Pig", "Monkey", "Rooster", "Orange Tabby", "Spotted Deer" },
+    ["Rare Summer Egg"] = { "Flamingo", "Toukan", "Sea Turtle", "Orangutan", "Seal" },
     ["Legendary Egg"] = { "Cow", "Polar Bear", "Sea Otter", "Turtle", "Silver Monkey" },
     ["Mythical Egg"] = { "Grey Mouse", "Brown Mouse", "Squirrel", "Red Giant Ant" },
     ["Bug Egg"] = { "Snail", "Caterpillar", "Giant Ant", "Praying Mantis" },
-    ["Night Egg"] = { "Frog", "Hedgehog", "Mole", "Echo Frog", "Night Owl" },
+    ["Night Egg"] = { "Frog", "Hedgehog", "Mole", "Echo Frog", "Night Owl", },
     ["Bee Egg"] = { "Bee", "Honey Bee", "Bear Bee", "Petal Bee" },
     ["Anti Bee Egg"] = { "Wasp", "Moth", "Tarantula Hawk" },
     ["Oasis Egg"] = { "Meerkat", "Sand Snake", "Axolotl" },
     ["Paradise Egg"] = { "Ostrich", "Peacock", "Capybara" },
-    ["Dinosaur Egg"] = { "Raptor", "Triceratops", "Stegosaurus" },
+    ["Dinosaur Egg"] = { "Raptor", "Triceratops", "Stegosaurus", "Brontosaurus"  },
     ["Primal Egg"] = { "Parasaurolophus", "Iguanodon", "Pachycephalosaurus" },
     ["Zen Egg"] = { "Shiba Inu", "Nihonzaru", "Tanuki", "Tanchozuru", "Kappa" },
 }
@@ -155,27 +157,28 @@ local function countdownAndRandomize(button)
     button.Text = "🎲 Randomize Pets"
 end
 
--- 🌿 GUI Setup
+-- 🌿 GUI Setup (Improved Look)
 local screenGui = Instance.new("ScreenGui", player:WaitForChild("PlayerGui"))
 screenGui.Name = "PetHatchGui"
 
 local frame = Instance.new("Frame")
-frame.Size = UDim2.new(0, 260, 0, 240)
+frame.Size = UDim2.new(0, 280, 0, 265)
 frame.Position = UDim2.new(0, 20, 0, 100)
-frame.BackgroundColor3 = Color3.fromRGB(105, 80, 60)
+frame.BackgroundColor3 = Color3.fromRGB(45, 45, 60)
 frame.BorderSizePixel = 0
 frame.Parent = screenGui
-Instance.new("UICorner", frame).CornerRadius = UDim.new(0, 10)
+Instance.new("UICorner", frame).CornerRadius = UDim.new(0, 12)
 
 local title = Instance.new("TextLabel", frame)
-title.Size = UDim2.new(1, 0, 0, 30)
+title.Size = UDim2.new(1, 0, 0, 36)
+title.Position = UDim2.new(0, 0, 0, 0)
 title.BackgroundTransparency = 1
 title.Text = "🐾 Pet Randomizer ✨"
 title.Font = Enum.Font.FredokaOne
-title.TextSize = 22
+title.TextSize = 24
 title.TextColor3 = Color3.fromRGB(255, 255, 255)
 
--- 👇 Dragging
+-- 👇 Dragging Support
 local drag = Instance.new("TextButton", title)
 drag.Size = UDim2.new(1, 0, 1, 0)
 drag.Text = ""
@@ -197,26 +200,28 @@ end)
 
 -- 🎲 Randomize Button
 local randomizeBtn = Instance.new("TextButton", frame)
-randomizeBtn.Size = UDim2.new(1, -20, 0, 50)
-randomizeBtn.Position = UDim2.new(0, 10, 0, 40)
-randomizeBtn.BackgroundColor3 = Color3.fromRGB(255, 140, 0)
+randomizeBtn.Size = UDim2.new(1, -24, 0, 50)
+randomizeBtn.Position = UDim2.new(0, 12, 0, 48)
+randomizeBtn.BackgroundColor3 = Color3.fromRGB(255, 115, 85)
 randomizeBtn.Text = "🎲 Randomize Pets"
 randomizeBtn.TextSize = 20
 randomizeBtn.Font = Enum.Font.FredokaOne
 randomizeBtn.TextColor3 = Color3.new(1, 1, 1)
+Instance.new("UICorner", randomizeBtn).CornerRadius = UDim.new(0, 8)
 randomizeBtn.MouseButton1Click:Connect(function()
     countdownAndRandomize(randomizeBtn)
 end)
 
 -- 👁️ ESP Toggle
 local toggleBtn = Instance.new("TextButton", frame)
-toggleBtn.Size = UDim2.new(1, -20, 0, 40)
-toggleBtn.Position = UDim2.new(0, 10, 0, 100)
-toggleBtn.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
+toggleBtn.Size = UDim2.new(1, -24, 0, 40)
+toggleBtn.Position = UDim2.new(0, 12, 0, 110)
+toggleBtn.BackgroundColor3 = Color3.fromRGB(100, 100, 180)
 toggleBtn.Text = "👁️ ESP: ON"
 toggleBtn.TextSize = 18
 toggleBtn.Font = Enum.Font.FredokaOne
 toggleBtn.TextColor3 = Color3.new(1, 1, 1)
+Instance.new("UICorner", toggleBtn).CornerRadius = UDim.new(0, 8)
 toggleBtn.MouseButton1Click:Connect(function()
     espEnabled = not espEnabled
     toggleBtn.Text = espEnabled and "👁️ ESP: ON" or "👁️ ESP: OFF"
@@ -229,20 +234,16 @@ toggleBtn.MouseButton1Click:Connect(function()
     end
 end)
 
--- 🟣 Initial ESP
-for _, egg in pairs(getPlayerGardenEggs(60)) do
-    applyEggESP(egg, truePetMap[egg])
-end
-
 -- 🔁 Auto Randomize Button
 local autoBtn = Instance.new("TextButton", frame)
-autoBtn.Size = UDim2.new(1, -20, 0, 30)
-autoBtn.Position = UDim2.new(0, 10, 0, 145)
-autoBtn.BackgroundColor3 = Color3.fromRGB(80, 150, 60)
+autoBtn.Size = UDim2.new(1, -24, 0, 40)
+autoBtn.Position = UDim2.new(0, 12, 0, 160)
+autoBtn.BackgroundColor3 = Color3.fromRGB(70, 170, 80)
 autoBtn.Text = "🔁 Auto Randomize: OFF"
-autoBtn.TextSize = 16
+autoBtn.TextSize = 17
 autoBtn.Font = Enum.Font.FredokaOne
 autoBtn.TextColor3 = Color3.new(1, 1, 1)
+Instance.new("UICorner", autoBtn).CornerRadius = UDim.new(0, 8)
 
 local autoRunning = false
 local bestPets = {
@@ -269,26 +270,15 @@ autoBtn.MouseButton1Click:Connect(function()
     end)()
 end)
 
--- ✨ Cool Load Pet Age Script Button
-local loadAgeBtn = Instance.new("TextButton", frame)
-loadAgeBtn.Size = UDim2.new(1, -20, 0, 30)
-loadAgeBtn.Position = UDim2.new(0, 10, 1, -35)
-loadAgeBtn.BackgroundColor3 = Color3.fromRGB(100, 90, 200)
-loadAgeBtn.Text = "🕒 Load Pet Age 50 Script"
-loadAgeBtn.TextSize = 16
-loadAgeBtn.Font = Enum.Font.FredokaOne
-loadAgeBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
-
-loadAgeBtn.MouseButton1Click:Connect(function()
-   loadstring(game:HttpGet("https://raw.githubusercontent.com/Crimson-Lag/x/refs/heads/main/Egg-Randomizer"))()
-end)
-
--- 👤 Credit
+-- 👤 Credit at Bottom
 local credit = Instance.new("TextLabel", frame)
-credit.Size = UDim2.new(1, 0, 0, 20)
-credit.Position = UDim2.new(0, 0, 0, 22)
+credit.Size = UDim2.new(1, -10, 0, 20)
+credit.Position = UDim2.new(0, 5, 1, -24)
 credit.BackgroundTransparency = 1
-credit.Text = "Made by - Kitsu"
+credit.Text = "🛠️ Made by Kitsu"
 credit.Font = Enum.Font.FredokaOne
 credit.TextSize = 14
-credit.TextColor3 = Color3.fromRGB(200, 200, 200)
+credit.TextColor3 = Color3.fromRGB(160, 160, 160)
+credit.TextTransparency = 0.1
+credit.TextXAlignment = Enum.TextXAlignment.Center
+
